@@ -1,0 +1,36 @@
+<!-- Lista Kampanii -->
+<div class="container mx-auto px-4 py-4">
+  <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Lista Kampanii</h2>
+
+  <div class="flex justify-end mb-6">
+    <button (click)="createCampaign()"
+            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition-colors duration-200">
+      Stwórz Kampanię
+    </button>
+  </div>
+
+  <!-- Campaign Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let campaign of campaigns$ | async"
+         class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-200">
+      <h3 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">{{ campaign.name }}</h3>
+      <ul class="text-gray-700 dark:text-gray-300 mb-4">
+        <li><strong>ID:</strong> {{ campaign.id }}</li>
+        <li><strong>Słowa kluczowe:</strong> {{ campaign.keywords.join(', ') }}</li>
+        <li><strong>Stawka:</strong> {{ campaign.bidAmount }}</li>
+        <li><strong>Fundusz:</strong> {{ campaign.campaignFund }}</li>
+        <li><strong>Miasto:</strong> {{ campaign.town }}</li>
+      </ul>
+      <div class="flex justify-between">
+        <button (click)="editCampaign(campaign.id)"
+                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 dark:bg-yellow-400 dark:hover:bg-yellow-500 transition-colors duration-200">
+          Edytuj
+        </button>
+        <button (click)="deleteCampaign(campaign.id)"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-colors duration-200">
+          Usuń
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
