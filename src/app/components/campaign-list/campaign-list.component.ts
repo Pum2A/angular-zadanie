@@ -1,57 +1,124 @@
-import { Component, OnInit, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
 import { Campaign } from '../../models/campaign.model';
 import { CampaignService } from '../../services/campaign.service';
+import { ConfirmationModalComponent } from '../confirmatiom-modal.component';
 import { ToastService } from '../../services/toast.service';
-
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-campaign-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, ConfirmationModalComponent],
   templateUrl: './campaign-list.component.html',
   styleUrls: ['./campaign-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CampaignListComponent implements OnInit {
-  campaigns$!: Observable<Campaign[]>;
+  allCampaigns: Campaign[] = [];
+  filteredCampaigns: Campaign[] = [];
+  pagedCampaigns: Campaign[] = [];
 
-  constructor(private campaignService: CampaignService, private router: Router, private toastService: ToastService) {}
+  searchTerm: string = '';
+  sortCriteria: string = 'name';
+
+  currentPage: number = 1;
+  pageSize: number = 6;
+
+  showDeleteModal: boolean = false;
+  selectedCampaignId: number | null = null;
+
+  constructor(
+    private campaignService: CampaignService,
+    private router: Router,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.loadCampaigns();
   }
 
   loadCampaigns(): void {
-    this.campaigns$ = this.campaignService.getAll();
+    this.campaignService.getAll().subscribe(campaigns => {
+      this.allCampaigns = campaigns;
+      this.applyFilters();
+    });
   }
 
-  // Funkcja do edytowania kampanii
+  applyFilters(): void {
+    this.filteredCampaigns = this.allCampaigns.filter(campaign =>
+      campaign.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+
+    if (this.sortCriteria === 'name') {
+      this.filteredCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (this.sortCriteria === 'bidAmount') {
+      this.filteredCampaigns.sort((a, b) => a.bidAmount - b.bidAmount);
+    }
+
+    this.currentPage = 1;
+    this.paginateCampaigns();
+  }
+
+  onSearchInput(): void {
+    this.applyFilters();
+  }
+
+  onSortChange(): void {
+    this.applyFilters();
+  }
+
+  paginateCampaigns(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.pagedCampaigns = this.filteredCampaigns.slice(start, end);
+  }
+
+  nextPage(): void {
+    if (this.currentPage * this.pageSize < this.filteredCampaigns.length) {
+      this.currentPage++;
+      this.paginateCampaigns();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.paginateCampaigns();
+    }
+  }
+
+  createCampaign(): void {
+    this.router.navigate(['/campaigns/create']);
+  }
+
   editCampaign(id: number): void {
     this.router.navigate(['/campaigns/edit', id]);
-    this.toastService.show('Edycja kampanii', 'info');
   }
 
-  // Funkcja do usuwania kampanii
   deleteCampaign(id: number): void {
-    if (confirm('Czy na pewno chcesz usunąć tę kampanię?')) {
-      this.campaignService.delete(id).subscribe((success) => {
-        if(success){
+    this.selectedCampaignId = id;
+    this.showDeleteModal = true;
+  }
+
+  handleDeleteConfirmed(): void {
+    if (this.selectedCampaignId !== null) {
+      this.campaignService.delete(this.selectedCampaignId).subscribe(success => {
+        if (success) {
           this.toastService.show('Kampania została usunięta.', 'success');
           this.loadCampaigns();
         } else {
           this.toastService.show('Wystąpił błąd przy usuwaniu kampanii.', 'error');
         }
-        // Odświeżenie listy – przy OnPush warto przekazać nową referencję
-        this.campaigns$ = this.campaignService.getAll();
+        this.showDeleteModal = false;
+        this.selectedCampaignId = null;
       });
     }
   }
 
-  // Funkcja do tworzenia nowej kampanii
-  createCampaign(): void {
-    this.router.navigate(['/campaigns/create']);
+  handleDeleteCanceled(): void {
+    this.showDeleteModal = false;
+    this.selectedCampaignId = null;
   }
 }

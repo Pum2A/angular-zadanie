@@ -11,7 +11,7 @@ describe('CampaignFormComponent', () => {
       imports: [CampaignFormComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(CampaignFormComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

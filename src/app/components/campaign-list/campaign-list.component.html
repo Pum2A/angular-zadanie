@@ -1,20 +1,38 @@
 <div class="container mx-auto px-4 py-8">
+  <!-- Breadcrumbs -->
+  <nav class="mb-4 text-sm" aria-label="Breadcrumb">
+    <ol class="list-reset flex text-gray-700 dark:text-gray-300">
+      <li><a href="/" class="hover:underline">Strona Główna</a></li>
+      <li><span class="mx-2">/</span></li>
+      <li>Kampanie</li>
+    </ol>
+  </nav>
+
   <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
-    <h2 class="text-3xl font-extrabold text-gray-800 dark:text-white">
-      Lista Kampanii
-    </h2>
+    <div class="flex space-x-2 mb-4 sm:mb-0">
+      <input type="text" placeholder="Szukaj kampanii..."
+             class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+             [(ngModel)]="searchTerm" (input)="onSearchInput()">
+      <select [(ngModel)]="sortCriteria" (change)="onSortChange()"
+              class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="name">Nazwa</option>
+        <option value="bidAmount">Stawka</option>
+      </select>
+    </div>
     <button (click)="createCampaign()"
-            class="mt-4 sm:mt-0 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md hover:from-green-700 hover:to-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500">
+            class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md hover:from-green-700 hover:to-green-800 transition-transform duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500">
       Stwórz Kampanię
     </button>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let campaign of campaigns$ | async"
-         class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 transform transition hover:-translate-y-1 hover:shadow-2xl">
-      <h3 class="text-2xl font-bold mb-3 text-gray-800 dark:text-white">{{ campaign.name }}</h3>
-      <ul class="text-gray-700 dark:text-gray-300 mb-4 space-y-1">
-        <!-- Wyświetlenie logo, jeśli dostępne -->
+    <div *ngFor="let campaign of pagedCampaigns"
+         class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer"
+         (click)="editCampaign(campaign.id)">
+      <h3 class="text-2xl font-bold mb-3 text-gray-800 dark:text-white" title="Kliknij, aby edytować">
+        {{ campaign.name }}
+      </h3>
+      <ul class="text-gray-700 dark:text-gray-300 mb-4 space-y-1 text-sm">
         <li *ngIf="campaign.logo">
           <strong>Logo:</strong>
           <img [src]="campaign.logo" alt="Logo" class="h-12 mt-2 rounded">
@@ -26,15 +44,35 @@
         <li><strong>Miasto:</strong> {{ campaign.town }}</li>
       </ul>
       <div class="flex justify-between">
-        <button (click)="editCampaign(campaign.id)"
-                class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        <button (click)="editCampaign(campaign.id); $event.stopPropagation()"
+                class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-transform duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-400">
           Edytuj
         </button>
-        <button (click)="deleteCampaign(campaign.id)"
-                class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500">
+        <button (click)="deleteCampaign(campaign.id); $event.stopPropagation()"
+                class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-transform duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500">
           Usuń
         </button>
       </div>
     </div>
   </div>
+
+  <div class="flex justify-center mt-6">
+    <button (click)="prevPage()" [disabled]="currentPage === 1"
+            class="px-4 py-2 bg-gray-500 text-white rounded-md mr-2 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400">
+      Poprzednia
+    </button>
+    <button (click)="nextPage()"
+            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400">
+      Następna
+    </button>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal
+    [show]="showDeleteModal"
+    title="Usuwanie kampanii"
+    message="Czy na pewno chcesz usunąć tę kampanię?"
+    (onConfirm)="handleDeleteConfirmed()"
+    (onCancel)="handleDeleteCanceled()">
+  </app-confirmation-modal>
 </div>

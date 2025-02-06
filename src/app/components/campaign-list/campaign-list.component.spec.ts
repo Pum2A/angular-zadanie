@@ -11,7 +11,7 @@ describe('CampaignListComponent', () => {
       imports: [CampaignListComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(CampaignListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

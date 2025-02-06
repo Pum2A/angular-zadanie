@@ -11,7 +11,7 @@ import { ToastComponent } from "./components/toast.component";
   imports: [RouterOutlet, CommonModule, TopbarComponent, FooterComponent, ToastComponent],
   template: `
     <app-topbar></app-topbar>
-<main class="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-900 dark:to-gray-800 py-8">
+<main class="min-h-fit bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-900 dark:to-gray-800 py-8">
   <router-outlet></router-outlet>
   <app-toast></app-toast>
 

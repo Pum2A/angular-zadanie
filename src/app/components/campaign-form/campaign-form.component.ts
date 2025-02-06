@@ -1,12 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/components/campaign-form/campaign-form.component.ts
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { debounceTime } from 'rxjs/operators';
+import { trigger, transition, style, animate } from '@angular/animations';
+
 import { Campaign } from '../../models/campaign.model';
 import { fundValidator } from '../../validators/campaign.validators';
 import { CampaignService } from '../../services/campaign.service';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 import { ToastService } from '../../services/toast.service';
+import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
+import { LOCAL_STORAGE } from '../../tokens/local-storage.token';
 
 @Component({
   selector: 'app-campaign-form',
@@ -14,15 +19,26 @@ import { ToastService } from '../../services/toast.service';
   imports: [CommonModule, ReactiveFormsModule, SafeUrlPipe],
   templateUrl: './campaign-form.component.html',
   styleUrls: ['./campaign-form.component.scss'],
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class CampaignFormComponent implements OnInit {
   campaignForm: FormGroup;
-  isEditMode = false;
+  isEditMode: boolean = false;
   campaignId: number | null = null;
   towns: string[] = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
-
-  // Zmieniamy typ na string | null, bo będziemy przechowywać data URL
   selectedFile: string | null = null;
+  uploadProgress: number = 100; // Domyślny uploadProgress = 100%
+  autoSaveKey: string = 'campaignFormData';
 
   constructor(
     private fb: FormBuilder,
@@ -30,6 +46,7 @@ export class CampaignFormComponent implements OnInit {
     private route: ActivatedRoute,
     public router: Router,
     private toastService: ToastService,
+    @Inject(LOCAL_STORAGE) private localStorage: Storage
   ) {
     this.campaignForm = this.fb.group({
       name: ['', Validators.required],
@@ -39,7 +56,7 @@ export class CampaignFormComponent implements OnInit {
       status: ['on', Validators.required],
       town: ['New York', Validators.required],
       radius: [null, [Validators.required, Validators.min(1)]],
-      logo: [null] // Pole do pliku
+      logo: [null]
     }, { validators: fundValidator });
   }
 
@@ -51,14 +68,24 @@ export class CampaignFormComponent implements OnInit {
         this.campaignId = Number(idParam);
         this.loadCampaign(this.campaignId);
       } else {
-        this.addKeyword(); // Dodajemy przynajmniej jedno pole
+        this.addKeyword();
+        this.loadAutoSavedData();
       }
 
-      // Zaktualizuj dostępne promienie w zależności od miasta
+      // Aktualizacja walidatorów dla promienia w zależności od miasta
       this.campaignForm.get('town')?.valueChanges.subscribe(town => {
         this.updateAvailableRadius(town);
       });
     });
+
+    // Auto-save formularza – zapis do localStorage po 1 sekundzie od ostatniej zmiany
+    this.campaignForm.valueChanges.pipe(debounceTime(1000))
+      .subscribe(value => {
+        if (this.localStorage) {
+          this.localStorage.setItem(this.autoSaveKey, JSON.stringify(value));
+          this.toastService.show('Formularz zapisany automatycznie.', 'info', 1500);
+        }
+      });
   }
 
   get keywords(): FormArray {
@@ -74,7 +101,7 @@ export class CampaignFormComponent implements OnInit {
   }
 
   loadCampaign(id: number): void {
-    this.campaignService.getById(id).subscribe(campaign => {
+    this.campaignService.getById(id).subscribe((campaign: Campaign | undefined) => {
       if (campaign) {
         this.campaignForm.patchValue({
           name: campaign.name,
@@ -82,18 +109,60 @@ export class CampaignFormComponent implements OnInit {
           campaignFund: campaign.campaignFund,
           status: campaign.status,
           town: campaign.town,
-          radius: campaign.radius
+          radius: campaign.radius,
         });
         this.keywords.clear();
         campaign.keywords.forEach(keyword => {
           this.keywords.push(this.fb.control(keyword, Validators.required));
         });
-        // Jeśli kampania ma już zapisane logo, możesz ustawić je jako selectedFile:
-        if(campaign.logo){
+        if (campaign.logo) {
           this.selectedFile = campaign.logo;
         }
       }
     });
+  }
+
+  loadAutoSavedData(): void {
+    if (this.localStorage) {
+      const savedData = this.localStorage.getItem(this.autoSaveKey);
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        this.campaignForm.patchValue(data);
+        if (data.keywords && data.keywords.length > 0) {
+          this.keywords.clear();
+          data.keywords.forEach((kw: string) => this.keywords.push(this.fb.control(kw, Validators.required)));
+        }
+        if (data.logo) {
+          this.selectedFile = data.logo;
+        }
+      }
+    }
+  }
+
+  updateAvailableRadius(town: string): void {
+    if (town === 'New York') {
+      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(50)]);
+    } else {
+      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(100)]);
+    }
+    this.campaignForm.get('radius')?.updateValueAndValidity();
+  }
+
+  onFileChange(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement?.files && inputElement.files.length > 0) {
+      const file = inputElement.files[0];
+      const reader = new FileReader();
+
+      this.uploadProgress = 0;
+      reader.onload = () => {
+        this.selectedFile = reader.result as string;
+        this.uploadProgress = 100;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      this.selectedFile = null;
+    }
   }
 
   onSubmit(): void {
@@ -118,43 +187,23 @@ export class CampaignFormComponent implements OnInit {
     if (this.isEditMode) {
       this.campaignService.update(campaign).subscribe(() => {
         this.toastService.show('Kampania została zaktualizowana!', 'success');
-
+        if (this.localStorage) { this.localStorage.removeItem(this.autoSaveKey); }
         this.router.navigate(['/campaigns']);
+      }, error => {
+        this.toastService.show('Błąd przy aktualizacji kampanii.', 'error');
       });
     } else {
       this.campaignService.add(campaign).subscribe(() => {
         this.toastService.show('Kampania została dodana!', 'success');
+        if (this.localStorage) { this.localStorage.removeItem(this.autoSaveKey); }
         this.router.navigate(['/campaigns']);
+      }, error => {
+        this.toastService.show('Błąd przy dodawaniu kampanii.', 'error');
       });
     }
   }
 
   onCancel(): void {
     this.router.navigate(['/campaigns']);
-  }
-
-  updateAvailableRadius(town: string): void {
-    if (town === 'New York') {
-      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(50)]);
-    } else {
-      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(100)]);
-    }
-    this.campaignForm.get('radius')?.updateValueAndValidity();
-  }
-
-  // Modyfikacja onFileChange – używamy FileReadera, aby przekonwertować plik na data URL
-  onFileChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    if (inputElement?.files && inputElement.files.length > 0) {
-      const file = inputElement.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        // reader.result jest typu string | ArrayBuffer, ale wiemy, że w tym przypadku to string (data URL)
-        this.selectedFile = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    } else {
-      this.selectedFile = null;
-    }
   }
 }
