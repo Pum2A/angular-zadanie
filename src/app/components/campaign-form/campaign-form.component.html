@@ -1,92 +1,127 @@
-<!-- Formularz Kampanii -->
-<div class="container mx-auto px-4 py-4">
-  <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-    {{ isEditMode ? 'Edytuj Kampanię' : 'Stwórz Kampanię' }}
-  </h2>
-  <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6 max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-    <!-- Nazwa Kampanii -->
-    <div>
-      <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nazwa Kampanii *</label>
-      <input id="name" formControlName="name" type="text"
-             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-             placeholder="Wprowadź nazwę kampanii">
-      <div *ngIf="campaignForm.get('name')?.touched && campaignForm.get('name')?.invalid"
-           class="text-red-600 dark:text-red-400 text-sm mt-1">
-        Nazwa jest wymagana.
-      </div>
-    </div>
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden transform transition duration-500 hover:scale-105">
+    <div class="p-8">
+      <h2 class="text-3xl font-extrabold text-center text-gray-800 dark:text-white mb-8">
+        {{ isEditMode ? 'Edytuj Kampanię' : 'Stwórz Kampanię' }}
+      </h2>
+      <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
+        <!-- Nazwa Kampanii -->
+        <div>
+          <label for="name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Nazwa Kampanii *
+          </label>
+          <input id="name" formControlName="name" type="text"
+                 class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Wprowadź nazwę kampanii">
+          <div *ngIf="campaignForm.get('name')?.touched && campaignForm.get('name')?.invalid"
+               class="text-red-600 dark:text-red-400 text-sm mt-1">
+            Nazwa jest wymagana.
+          </div>
+        </div>
 
-    <!-- Bid Amount & Campaign Fund -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label for="bidAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stawka *</label>
-        <input id="bidAmount" formControlName="bidAmount" type="number" min="0.1" step="0.1"
-               class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-               placeholder="Wprowadź stawkę">
-      </div>
-      <div>
-        <label for="campaignFund" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fundusz Kampanii *</label>
-        <input id="campaignFund" formControlName="campaignFund" type="number" min="0" step="1"
-               class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-               placeholder="Wprowadź fundusz kampanii">
-      </div>
-    </div>
+        <!-- Bid Amount & Campaign Fund -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="bidAmount" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Stawka *
+            </label>
+            <input id="bidAmount" formControlName="bidAmount" type="number" min="0.1" step="0.1"
+                   class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="Wprowadź stawkę">
+          </div>
+          <div>
+            <label for="campaignFund" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Fundusz Kampanii *
+            </label>
+            <input id="campaignFund" formControlName="campaignFund" type="number" min="0" step="1"
+                   class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="Wprowadź fundusz kampanii">
+          </div>
+        </div>
 
-    <!-- Walidacja Funduszu -->
-    <div *ngIf="campaignForm.errors?.['insufficientFund']" class="text-red-600 dark:text-red-400 text-sm">
-      Fundusz kampanii musi być przynajmniej 10-krotnością stawki.
-    </div>
+        <!-- Walidacja Funduszu -->
+        <div *ngIf="campaignForm.errors?.['insufficientFund']"
+             class="text-red-600 dark:text-red-400 text-sm">
+          Fundusz kampanii musi być przynajmniej 10-krotnością stawki.
+        </div>
 
-    <!-- Keywords -->
-    <div formArrayName="keywords">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Słowa Kluczowe *</label>
-      <div *ngFor="let keywordCtrl of keywords.controls; let i = index" class="flex items-center mt-2">
-        <input [formControlName]="i" type="text"
-               class="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-               placeholder="Wprowadź słowo kluczowe">
-        <button type="button" (click)="removeKeyword(i)"
-                class="ml-2 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 dark:bg-red-400 dark:hover:bg-red-500 transition-colors duration-200">
-          Usuń
-        </button>
-      </div>
-      <button type="button" (click)="addKeyword()" class="mt-3 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 transition-colors duration-200">
-        Dodaj Słowo Kluczowe
-      </button>
-    </div>
+        <!-- Keywords -->
+        <div formArrayName="keywords">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Słowa Kluczowe *
+          </label>
+          <div *ngFor="let keywordCtrl of keywords.controls; let i = index" class="flex items-center mt-2">
+            <input [formControlName]="i" type="text"
+                   class="flex-1 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="Wprowadź słowo kluczowe">
+            <button type="button" (click)="removeKeyword(i)"
+                    class="ml-2 px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200">
+              Usuń
+            </button>
+          </div>
+          <button type="button" (click)="addKeyword()"
+                  class="mt-3 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 transition-colors duration-200">
+            Dodaj Słowo Kluczowe
+          </button>
+        </div>
 
-    <!-- Status -->
-    <div>
-      <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status *</label>
-      <select id="status" formControlName="status"
-              class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-        <option value="on">Włączony</option>
-        <option value="off">Wyłączony</option>
-      </select>
-    </div>
+        <!-- Status -->
+        <div>
+          <label for="status" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Status *
+          </label>
+          <select id="status" formControlName="status"
+                  class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="on">Włączony</option>
+            <option value="off">Wyłączony</option>
+          </select>
+        </div>
 
-    <!-- Town & Radius -->
-    <div>
-      <label for="town" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Miasto</label>
-      <select id="town" formControlName="town"
-              class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-        <option *ngFor="let town of towns" [value]="town">{{ town }}</option>
-      </select>
-    </div>
-    <div>
-      <label for="radius" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Promień (km) *</label>
-      <input id="radius" formControlName="radius" type="number" min="1" step="1"
-             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-             placeholder="Wprowadź promień w km">
-    </div>
+        <!-- Town & Radius -->
+        <div>
+          <label for="town" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Miasto
+          </label>
+          <select id="town" formControlName="town"
+                  class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option *ngFor="let town of towns" [value]="town">{{ town }}</option>
+          </select>
+        </div>
 
-    <!-- Przyciski Akcji -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-      <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
-        {{ isEditMode ? 'Zaktualizuj' : 'Stwórz' }}
-      </button>
-      <button type="button" (click)="onCancel()" class="w-full sm:w-auto px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors duration-200">
-        Anuluj
-      </button>
+        <div>
+          <label for="radius" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Promień (km)
+          </label>
+          <input id="radius" formControlName="radius" type="number" min="1"
+                 class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Wprowadź promień w kilometrach">
+        </div>
+
+        <!-- Logo -->
+        <div>
+          <label for="logo" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Logo
+          </label>
+          <input id="logo" type="file" (change)="onFileChange($event)"
+                 class="mt-1 block w-full text-gray-800 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700">
+          <!-- Podgląd przesłanego logo -->
+          <div *ngIf="selectedFile" class="mt-3">
+            <img [src]="selectedFile | safeUrl" alt="Logo Preview" class="h-16 rounded shadow">
+          </div>
+        </div>
+
+        <!-- Przycisk Submit i Anuluj -->
+        <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+          <button type="submit" [disabled]="campaignForm.invalid"
+                  class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-md hover:from-indigo-700 hover:to-indigo-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            {{ isEditMode ? 'Zapisz Zmiany' : 'Stwórz Kampanię' }}
+          </button>
+          <button type="button" (click)="onCancel()"
+                  class="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-md hover:from-gray-600 hover:to-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+            Anuluj
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>

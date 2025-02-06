@@ -7,4 +7,5 @@ export interface Campaign {
   status: 'on' | 'off';
   town: string;
   radius: number;
+  logo?: string;
 }

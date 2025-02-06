@@ -1,4 +1,3 @@
-// src/app/services/campaign.service.ts
 import { Injectable } from '@angular/core';
 import { Campaign } from '../models/campaign.model';
 import { Observable, of } from 'rxjs';
@@ -16,7 +15,8 @@ export class CampaignService {
       campaignFund: 100,
       status: 'on',
       town: 'New York',
-      radius: 10
+      radius: 10,
+      logo: 'https://via.placeholder.com/151'
     },
     {
       id: 2,
@@ -26,7 +26,8 @@ export class CampaignService {
       campaignFund: 200,
       status: 'off',
       town: 'Los Angeles',
-      radius: 20
+      radius: 20,
+      logo: 'https://via.placeholder.com/150'
     }
   ];
 
