@@ -17,7 +17,8 @@ export class InMemoryDataService implements InMemoryDbService {
         campaignFund: 100,
         status: 'on',
         town: 'New York',
-        radius: 10
+        radius: 10,
+        logo: 'https://via.placeholder.com/150'
       },
       {
         id: 2,
@@ -27,7 +28,9 @@ export class InMemoryDataService implements InMemoryDbService {
         campaignFund: 200,
         status: 'off',
         town: 'Los Angeles',
-        radius: 20
+        radius: 20,
+        logo: 'https://via.placeholder.com/151'
+
       }
     ];
     return { campaigns };

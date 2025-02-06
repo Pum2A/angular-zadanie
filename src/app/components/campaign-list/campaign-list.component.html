@@ -27,8 +27,13 @@
     </button>
   </div>
 
-  <!-- Karty kampanii -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <!-- Komunikat, gdy nie znaleziono żadnych kampanii -->
+  <div *ngIf="filteredCampaigns.length === 0" class="text-center py-8">
+    <p class="text-lg text-gray-600 dark:text-gray-300">Nie znaleziono żadnych kampanii.</p>
+  </div>
+
+  <!-- Karty kampanii (wyświetlamy tylko, jeśli lista nie jest pusta) -->
+  <div *ngIf="filteredCampaigns.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <div *ngFor="let campaign of pagedCampaigns"
          class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 transform transition-all duration-300 hover:-translate-y-2 hover:shadow-3xl cursor-pointer"
          (click)="editCampaign(campaign.id)">
@@ -75,12 +80,13 @@
     </div>
   </div>
 
-  <!-- Nawigacja stronicowania -->
-  <div class="flex justify-center mt-6 space-x-4">
+  <!-- Nawigacja stronicowania (pokazujemy, gdy są jakieś wyniki) -->
+  <div *ngIf="filteredCampaigns.length > 0" class="flex justify-center mt-6 space-x-4">
     <button (click)="prevPage()" [disabled]="currentPage === 1"
             class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">
       Poprzednia
     </button>
+<div class="flex justify-center items-center">Strona nr: {{currentPage}}</div>
     <button (click)="nextPage()"
             class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">
       Następna

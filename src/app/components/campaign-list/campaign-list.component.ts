@@ -26,7 +26,6 @@ export class CampaignListComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 6;
 
-
   showDeleteModal: boolean = false;
   selectedCampaignId: number | null = null;
 
@@ -48,16 +47,23 @@ export class CampaignListComponent implements OnInit {
   }
 
   applyFilters(): void {
+    // Filtrujemy kampanie na podstawie wyszukiwanej nazwy
     this.filteredCampaigns = this.allCampaigns.filter(campaign =>
       campaign.name.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
 
+    // Sortujemy kampanie
     if (this.sortCriteria === 'name') {
       this.filteredCampaigns.sort((a, b) => a.name.localeCompare(b.name));
     } else if (this.sortCriteria === 'bidAmount') {
       this.filteredCampaigns.sort((a, b) => a.bidAmount - b.bidAmount);
     }
 
+    if(this.filteredCampaigns.length === 0) {
+
+    }
+
+    // Resetujemy numer aktualnej strony i dokonujemy paginacji
     this.currentPage = 1;
     this.paginateCampaigns();
   }
