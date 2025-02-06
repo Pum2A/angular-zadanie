@@ -2,19 +2,21 @@
   <!-- Breadcrumbs -->
   <nav class="mb-4 text-sm" aria-label="Breadcrumb">
     <ol class="list-reset flex text-gray-700 dark:text-gray-300">
-      <li><a href="/" class="hover:underline">Strona Główna</a></li>
+      <li><a href="/" class="hover:underline transition-colors">Strona Główna</a></li>
       <li><span class="mx-2">/</span></li>
       <li>Kampanie</li>
     </ol>
   </nav>
 
+  <!-- Nagłówek z wyszukiwarką i sortowaniem -->
   <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
-    <div class="flex space-x-2 mb-4 sm:mb-0">
+    <div class="relative flex items-center space-x-2 mb-4 sm:mb-0">
+      <span class="material-icons absolute left-3 text-gray-400">search</span>
       <input type="text" placeholder="Szukaj kampanii..."
-             class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+             class="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
              [(ngModel)]="searchTerm" (input)="onSearchInput()">
       <select [(ngModel)]="sortCriteria" (change)="onSortChange()"
-              class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              class="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
         <option value="name">Nazwa</option>
         <option value="bidAmount">Stawka</option>
       </select>
@@ -25,23 +27,40 @@
     </button>
   </div>
 
+  <!-- Karty kampanii -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <div *ngFor="let campaign of pagedCampaigns"
-         class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer"
+         class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 transform transition-all duration-300 hover:-translate-y-2 hover:shadow-3xl cursor-pointer"
          (click)="editCampaign(campaign.id)">
       <h3 class="text-2xl font-bold mb-3 text-gray-800 dark:text-white" title="Kliknij, aby edytować">
         {{ campaign.name }}
       </h3>
       <ul class="text-gray-700 dark:text-gray-300 mb-4 space-y-1 text-sm">
-        <li *ngIf="campaign.logo">
+        <li *ngIf="campaign.logo" class="flex items-center gap-1">
+          <span class="material-icons text-indigo-500">image</span>
           <strong>Logo:</strong>
-          <img [src]="campaign.logo" alt="Logo" class="h-12 mt-2 rounded">
+          <img [src]="campaign.logo" alt="Logo" class="h-10 w-10 rounded-full border ml-2">
         </li>
-        <li><strong>ID:</strong> {{ campaign.id }}</li>
-        <li><strong>Słowa kluczowe:</strong> {{ campaign.keywords.join(', ') }}</li>
-        <li><strong>Stawka:</strong> {{ campaign.bidAmount }}</li>
-        <li><strong>Fundusz:</strong> {{ campaign.campaignFund }}</li>
-        <li><strong>Miasto:</strong> {{ campaign.town }}</li>
+        <li class="flex items-center gap-1">
+          <span class="material-icons text-gray-500 text-base">fingerprint</span>
+          <strong>ID:</strong> <span>{{ campaign.id }}</span>
+        </li>
+        <li class="flex items-center gap-1">
+          <span class="material-icons text-gray-500 text-base">label</span>
+          <strong>Słowa kluczowe:</strong> <span>{{ campaign.keywords.join(', ') }}</span>
+        </li>
+        <li class="flex items-center gap-1">
+          <span class="material-icons text-gray-500 text-base">attach_money</span>
+          <strong>Stawka:</strong> <span>{{ campaign.bidAmount }}</span>
+        </li>
+        <li class="flex items-center gap-1">
+          <span class="material-icons text-gray-500 text-base">account_balance_wallet</span>
+          <strong>Fundusz:</strong> <span>{{ campaign.campaignFund }}</span>
+        </li>
+        <li class="flex items-center gap-1">
+          <span class="material-icons text-gray-500 text-base">location_on</span>
+          <strong>Miasto:</strong> <span>{{ campaign.town }}</span>
+        </li>
       </ul>
       <div class="flex justify-between">
         <button (click)="editCampaign(campaign.id); $event.stopPropagation()"
@@ -56,13 +75,14 @@
     </div>
   </div>
 
-  <div class="flex justify-center mt-6">
+  <!-- Nawigacja stronicowania -->
+  <div class="flex justify-center mt-6 space-x-4">
     <button (click)="prevPage()" [disabled]="currentPage === 1"
-            class="px-4 py-2 bg-gray-500 text-white rounded-md mr-2 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400">
+            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">
       Poprzednia
     </button>
     <button (click)="nextPage()"
-            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400">
+            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">
       Następna
     </button>
   </div>

@@ -21,5 +21,5 @@ import { ToastComponent } from "./components/toast.component";
   styles: [],
 })
 export class AppComponent {
-  title = 'my-project';
+  title = 'Project';
 }

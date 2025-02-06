@@ -26,6 +26,7 @@ export class CampaignListComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 6;
 
+
   showDeleteModal: boolean = false;
   selectedCampaignId: number | null = null;
 
