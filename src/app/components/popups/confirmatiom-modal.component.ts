@@ -17,7 +17,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           {{ title }}
         </h3>
         <p class="text-gray-700 dark:text-gray-300 mb-6">{{ message }}</p>
-        <div class="flex justify-end space-x-4">
+        <div class="flex justify-end space-x-4 gap-5">
           <button
             (click)="confirm()"
             class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
