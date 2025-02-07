@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { CampaignListComponent } from './campaign-list.component';
 import { CampaignService } from '../../services/campaign.service';
 import { ToastService } from '../../services/toast.service';
@@ -15,13 +20,43 @@ describe('CampaignListComponent', () => {
   let routerSpy: jasmine.SpyObj<Router>;
 
   const mockCampaigns: Campaign[] = [
-    { id: 1, name: 'Alpha', keywords: ['one'], bidAmount: 1.5, campaignFund: 100, status: 'on', town: 'New York', radius: 10 },
-    { id: 2, name: 'Beta', keywords: ['two'], bidAmount: 2.5, campaignFund: 200, status: 'off', town: 'Los Angeles', radius: 20 },
-    { id: 3, name: 'Gamma', keywords: ['three'], bidAmount: 3.5, campaignFund: 300, status: 'on', town: 'Chicago', radius: 30 },
+    {
+      id: 1,
+      name: 'Alpha',
+      keywords: ['one'],
+      bidAmount: 1.5,
+      campaignFund: 100,
+      status: 'on',
+      town: 'New York',
+      radius: 10,
+    },
+    {
+      id: 2,
+      name: 'Beta',
+      keywords: ['two'],
+      bidAmount: 2.5,
+      campaignFund: 200,
+      status: 'off',
+      town: 'Los Angeles',
+      radius: 20,
+    },
+    {
+      id: 3,
+      name: 'Gamma',
+      keywords: ['three'],
+      bidAmount: 3.5,
+      campaignFund: 300,
+      status: 'on',
+      town: 'Chicago',
+      radius: 30,
+    },
   ];
 
   beforeEach(async () => {
-    campaignServiceSpy = jasmine.createSpyObj('CampaignService', ['getAll', 'delete']);
+    campaignServiceSpy = jasmine.createSpyObj('CampaignService', [
+      'getAll',
+      'delete',
+    ]);
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['show']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
@@ -32,7 +67,7 @@ describe('CampaignListComponent', () => {
         { provide: CampaignService, useValue: campaignServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
         { provide: Router, useValue: routerSpy },
-      ]
+      ],
     }).compileComponents();
   });
 
@@ -50,7 +85,9 @@ describe('CampaignListComponent', () => {
   it('metoda loadCampaigns ładuje kampanie i ustawia filteredCampaigns oraz pagedCampaigns', () => {
     expect(component.allCampaigns.length).toEqual(mockCampaigns.length);
     expect(component.filteredCampaigns.length).toEqual(mockCampaigns.length);
-    expect(component.pagedCampaigns.length).toBeLessThanOrEqual(component.pageSize);
+    expect(component.pagedCampaigns.length).toBeLessThanOrEqual(
+      component.pageSize
+    );
   });
 
   it('metoda applyFilters filtruje kampanie wg searchTerm', () => {
@@ -103,7 +140,10 @@ describe('CampaignListComponent', () => {
     component.handleDeleteConfirmed();
     tick();
     expect(campaignServiceSpy.delete).toHaveBeenCalledWith(1);
-    expect(toastServiceSpy.show).toHaveBeenCalledWith('Kampania została usunięta.', 'success');
+    expect(toastServiceSpy.show).toHaveBeenCalledWith(
+      'Kampania została usunięta.',
+      'success'
+    );
     expect(component.showDeleteModal).toBeFalse();
     expect(component.selectedCampaignId).toBeNull();
   }));

@@ -1,9 +1,15 @@
-// src/app/components/campaign-form/campaign-form.component.ts
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+  FormArray,
+} from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 
 import { Campaign } from '../../models/campaign.model';
@@ -23,22 +29,28 @@ import { LOCAL_STORAGE } from '../../tokens/local-storage.token';
     trigger('fadeInOut', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('300ms ease-in', style({ opacity: 1 }))
+        animate('300ms ease-in', style({ opacity: 1 })),
       ]),
-      transition(':leave', [
-        animate('300ms ease-out', style({ opacity: 0 }))
-      ])
-    ])
-  ]
+      transition(':leave', [animate('300ms ease-out', style({ opacity: 0 }))]),
+    ]),
+  ],
 })
-export class CampaignFormComponent implements OnInit {
+export class CampaignFormComponent implements OnInit, OnDestroy {
   campaignForm: FormGroup;
   isEditMode: boolean = false;
   campaignId: number | null = null;
-  towns: string[] = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
+  towns: string[] = [
+    'New York',
+    'Los Angeles',
+    'Chicago',
+    'Houston',
+    'Phoenix',
+  ];
   selectedFile: string | null = null;
   uploadProgress: number = 100; // Domyślny uploadProgress = 100%
   autoSaveKey: string = 'campaignFormData';
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -48,20 +60,27 @@ export class CampaignFormComponent implements OnInit {
     private toastService: ToastService,
     @Inject(LOCAL_STORAGE) private localStorage: Storage
   ) {
-    this.campaignForm = this.fb.group({
-      name: ['', Validators.required],
-      keywords: this.fb.array([], Validators.required),
-      bidAmount: [null, [Validators.required, Validators.min(0.1)]],
-      campaignFund: [null, Validators.required],
-      status: ['on', Validators.required],
-      town: ['New York', Validators.required],
-      radius: [null, [Validators.required, Validators.min(1)]],
-      logo: [null]
-    }, { validators: fundValidator });
+    this.campaignForm = this.createCampaignForm();
+  }
+
+  private createCampaignForm(): FormGroup {
+    return this.fb.group(
+      {
+        name: ['', Validators.required],
+        keywords: this.fb.array([], Validators.required),
+        bidAmount: [null, [Validators.required, Validators.min(0.1)]],
+        campaignFund: [null, Validators.required],
+        status: ['on', Validators.required],
+        town: ['New York', Validators.required],
+        radius: [null, [Validators.required, Validators.min(1)]],
+        logo: [null],
+      },
+      { validators: fundValidator }
+    );
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const idParam = params.get('id');
       if (idParam) {
         this.isEditMode = true;
@@ -72,18 +91,24 @@ export class CampaignFormComponent implements OnInit {
         this.loadAutoSavedData();
       }
 
-      // Aktualizacja walidatorów dla promienia w zależności od miasta
-      this.campaignForm.get('town')?.valueChanges.subscribe(town => {
-        this.updateAvailableRadius(town);
-      });
+      // Aktualizacja walidatorów promienia w zależności od wybranego miasta
+      this.campaignForm
+        .get('town')
+        ?.valueChanges.pipe(takeUntil(this.destroy$))
+        .subscribe((town) => this.updateAvailableRadius(town));
     });
 
-    // Auto-save formularza – zapis do localStorage po 1 sekundzie od ostatniej zmiany
-    this.campaignForm.valueChanges.pipe(debounceTime(1000))
-      .subscribe(value => {
-        if (this.localStorage) {
+    // Auto-save formularza – zapis do localStorage po 1 sekundzie od ostatniej zmiany, gdy formularz jest "dirty"
+    this.campaignForm.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
+      .subscribe((value) => {
+        if (this.campaignForm.dirty && this.localStorage) {
           this.localStorage.setItem(this.autoSaveKey, JSON.stringify(value));
-          this.toastService.show('Formularz zapisany automatycznie.', 'info', 1500);
+          this.toastService.show(
+            'Formularz zapisany automatycznie.',
+            'info',
+            1500
+          );
         }
       });
   }
@@ -101,25 +126,28 @@ export class CampaignFormComponent implements OnInit {
   }
 
   loadCampaign(id: number): void {
-    this.campaignService.getById(id).subscribe((campaign: Campaign | undefined) => {
-      if (campaign) {
-        this.campaignForm.patchValue({
-          name: campaign.name,
-          bidAmount: campaign.bidAmount,
-          campaignFund: campaign.campaignFund,
-          status: campaign.status,
-          town: campaign.town,
-          radius: campaign.radius,
-        });
-        this.keywords.clear();
-        campaign.keywords.forEach(keyword => {
-          this.keywords.push(this.fb.control(keyword, Validators.required));
-        });
-        if (campaign.logo) {
-          this.selectedFile = campaign.logo;
+    this.campaignService
+      .getById(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((campaign: Campaign | undefined) => {
+        if (campaign) {
+          this.campaignForm.patchValue({
+            name: campaign.name,
+            bidAmount: campaign.bidAmount,
+            campaignFund: campaign.campaignFund,
+            status: campaign.status,
+            town: campaign.town,
+            radius: campaign.radius,
+          });
+          this.keywords.clear();
+          campaign.keywords.forEach((keyword) =>
+            this.keywords.push(this.fb.control(keyword, Validators.required))
+          );
+          if (campaign.logo) {
+            this.selectedFile = campaign.logo;
+          }
         }
-      }
-    });
+      });
   }
 
   loadAutoSavedData(): void {
@@ -128,9 +156,11 @@ export class CampaignFormComponent implements OnInit {
       if (savedData) {
         const data = JSON.parse(savedData);
         this.campaignForm.patchValue(data);
-        if (data.keywords && data.keywords.length > 0) {
+        if (data.keywords?.length) {
           this.keywords.clear();
-          data.keywords.forEach((kw: string) => this.keywords.push(this.fb.control(kw, Validators.required)));
+          data.keywords.forEach((kw: string) =>
+            this.keywords.push(this.fb.control(kw, Validators.required))
+          );
         }
         if (data.logo) {
           this.selectedFile = data.logo;
@@ -140,20 +170,34 @@ export class CampaignFormComponent implements OnInit {
   }
 
   updateAvailableRadius(town: string): void {
-    if (town === 'New York') {
-      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(50)]);
-    } else {
-      this.campaignForm.get('radius')?.setValidators([Validators.required, Validators.min(1), Validators.max(100)]);
+    const radiusControl = this.campaignForm.get('radius');
+    if (!radiusControl) {
+      return;
     }
-    this.campaignForm.get('radius')?.updateValueAndValidity();
+    const validators =
+      town === 'New York'
+        ? [Validators.required, Validators.min(1), Validators.max(50)]
+        : [Validators.required, Validators.min(1), Validators.max(100)];
+    radiusControl.setValidators(validators);
+    radiusControl.updateValueAndValidity();
   }
 
   onFileChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    if (inputElement?.files && inputElement.files.length > 0) {
-      const file = inputElement.files[0];
+    const inputEl = event.target as HTMLInputElement;
+    if (inputEl?.files && inputEl.files.length > 0) {
+      const file = inputEl.files[0];
+      // Walidacja typu pliku – akceptujemy tylko obrazy
+      if (!file.type.startsWith('image/')) {
+        this.toastService.show('Wybrany plik musi być obrazem.', 'error');
+        return;
+      }
+      // Opcjonalnie: walidacja rozmiaru pliku (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.toastService.show('Plik jest zbyt duży (max 5MB).', 'error');
+        return;
+      }
       const reader = new FileReader();
-
       this.uploadProgress = 0;
       reader.onload = () => {
         this.selectedFile = reader.result as string;
@@ -171,7 +215,6 @@ export class CampaignFormComponent implements OnInit {
       this.toastService.show('Formularz zawiera błędy. Sprawdź dane.', 'error');
       return;
     }
-
     const campaign: Campaign = {
       id: this.campaignId ? this.campaignId : 0,
       name: this.campaignForm.value.name,
@@ -181,29 +224,39 @@ export class CampaignFormComponent implements OnInit {
       status: this.campaignForm.value.status,
       town: this.campaignForm.value.town,
       radius: this.campaignForm.value.radius,
-      logo: this.selectedFile ? this.selectedFile : undefined
+      logo: this.selectedFile ? this.selectedFile : undefined,
     };
 
-    if (this.isEditMode) {
-      this.campaignService.update(campaign).subscribe(() => {
-        this.toastService.show('Kampania została zaktualizowana!', 'success');
-        if (this.localStorage) { this.localStorage.removeItem(this.autoSaveKey); }
+    const request = this.isEditMode
+      ? this.campaignService.update(campaign)
+      : this.campaignService.add(campaign);
+
+    request.pipe(takeUntil(this.destroy$)).subscribe(
+      () => {
+        const msg = this.isEditMode
+          ? 'Kampania została zaktualizowana!'
+          : 'Kampania została dodana!';
+        this.toastService.show(msg, 'success');
+        if (this.localStorage) {
+          this.localStorage.removeItem(this.autoSaveKey);
+        }
         this.router.navigate(['/campaigns']);
-      }, error => {
-        this.toastService.show('Błąd przy aktualizacji kampanii.', 'error');
-      });
-    } else {
-      this.campaignService.add(campaign).subscribe(() => {
-        this.toastService.show('Kampania została dodana!', 'success');
-        if (this.localStorage) { this.localStorage.removeItem(this.autoSaveKey); }
-        this.router.navigate(['/campaigns']);
-      }, error => {
-        this.toastService.show('Błąd przy dodawaniu kampanii.', 'error');
-      });
-    }
+      },
+      (error) => {
+        const errMsg = this.isEditMode
+          ? 'Błąd przy aktualizacji kampanii.'
+          : 'Błąd przy dodawaniu kampanii.';
+        this.toastService.show(errMsg, 'error');
+      }
+    );
   }
 
   onCancel(): void {
     this.router.navigate(['/campaigns']);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -3,7 +3,7 @@ import { Campaign } from '../models/campaign.model';
 import { Observable, of } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CampaignService {
   private campaigns: Campaign[] = [
@@ -16,7 +16,7 @@ export class CampaignService {
       status: 'on',
       town: 'New York',
       radius: 10,
-      logo: 'https://via.placeholder.com/151'
+      logo: 'https://via.placeholder.com/151',
     },
     {
       id: 2,
@@ -27,8 +27,8 @@ export class CampaignService {
       status: 'off',
       town: 'Los Angeles',
       radius: 20,
-      logo: 'https://via.placeholder.com/150'
-    }
+      logo: 'https://via.placeholder.com/150',
+    },
   ];
 
   getAll(): Observable<Campaign[]> {
@@ -36,7 +36,7 @@ export class CampaignService {
   }
 
   getById(id: number): Observable<Campaign | undefined> {
-    return of(this.campaigns.find(c => c.id === id));
+    return of(this.campaigns.find((c) => c.id === id));
   }
 
   add(campaign: Campaign): Observable<Campaign> {
@@ -46,7 +46,7 @@ export class CampaignService {
   }
 
   update(campaign: Campaign): Observable<Campaign> {
-    const index = this.campaigns.findIndex(c => c.id === campaign.id);
+    const index = this.campaigns.findIndex((c) => c.id === campaign.id);
     if (index !== -1) {
       this.campaigns[index] = campaign;
     }
@@ -54,7 +54,7 @@ export class CampaignService {
   }
 
   delete(id: number): Observable<boolean> {
-    const index = this.campaigns.findIndex(c => c.id === id);
+    const index = this.campaigns.findIndex((c) => c.id === id);
     if (index !== -1) {
       this.campaigns.splice(index, 1);
       return of(true);
@@ -63,6 +63,8 @@ export class CampaignService {
   }
 
   private generateId(): number {
-    return this.campaigns.length > 0 ? Math.max(...this.campaigns.map(c => c.id)) + 1 : 1;
+    return this.campaigns.length > 0
+      ? Math.max(...this.campaigns.map((c) => c.id)) + 1
+      : 1;
   }
 }

@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { CampaignFormComponent } from './campaign-form.component';
 import { ReactiveFormsModule, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
@@ -19,13 +24,17 @@ describe('CampaignFormComponent', () => {
 
   beforeEach(async () => {
     // Przygotowujemy spy dla serwisów
-    campaignServiceSpy = jasmine.createSpyObj('CampaignService', ['getById', 'update', 'add']);
+    campaignServiceSpy = jasmine.createSpyObj('CampaignService', [
+      'getById',
+      'update',
+      'add',
+    ]);
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['show']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     // Używamy convertToParamMap, aby stworzyć obiekt ParamMap
     activatedRouteStub = {
-      paramMap: of(convertToParamMap({ id: '1' }))
+      paramMap: of(convertToParamMap({ id: '1' })),
     };
 
     // Prosty stub dla localStorage – wystarczające metody
@@ -33,7 +42,7 @@ describe('CampaignFormComponent', () => {
       getItem: jasmine.createSpy('getItem').and.returnValue(null),
       setItem: jasmine.createSpy('setItem'),
       removeItem: jasmine.createSpy('removeItem'),
-      clear: jasmine.createSpy('clear')
+      clear: jasmine.createSpy('clear'),
     };
 
     await TestBed.configureTestingModule({
@@ -44,8 +53,8 @@ describe('CampaignFormComponent', () => {
         { provide: ToastService, useValue: toastServiceSpy },
         { provide: Router, useValue: routerSpy },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
-        { provide: LOCAL_STORAGE, useValue: localStorageStub }
-      ]
+        { provide: LOCAL_STORAGE, useValue: localStorageStub },
+      ],
     }).compileComponents();
   });
 
@@ -101,7 +110,7 @@ describe('CampaignFormComponent', () => {
       status: 'on',
       town: 'New York',
       radius: 10,
-      logo: null
+      logo: null,
     });
     // Upewniamy się, że mamy co najmniej jedno słowo kluczowe
     component.keywords.clear();
@@ -118,13 +127,16 @@ describe('CampaignFormComponent', () => {
       status: 'on',
       town: 'New York',
       radius: 10,
-      logo: undefined
+      logo: undefined,
     };
     campaignServiceSpy.add.and.returnValue(of(fakeCampaign));
     component.onSubmit();
     tick();
     expect(campaignServiceSpy.add).toHaveBeenCalled();
-    expect(toastServiceSpy.show).toHaveBeenCalledWith('Kampania została dodana!', 'success');
+    expect(toastServiceSpy.show).toHaveBeenCalledWith(
+      'Kampania została dodana!',
+      'success'
+    );
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/campaigns']);
   }));
 
@@ -139,7 +151,7 @@ describe('CampaignFormComponent', () => {
       status: 'on',
       town: 'New York',
       radius: 10,
-      logo: null
+      logo: null,
     });
     component.keywords.clear();
     component.addKeyword();
@@ -154,33 +166,39 @@ describe('CampaignFormComponent', () => {
       status: 'on',
       town: 'New York',
       radius: 10,
-      logo: undefined
+      logo: undefined,
     };
     campaignServiceSpy.update.and.returnValue(of(fakeCampaign));
     component.onSubmit();
     tick();
     expect(campaignServiceSpy.update).toHaveBeenCalled();
-    expect(toastServiceSpy.show).toHaveBeenCalledWith('Kampania została zaktualizowana!', 'success');
+    expect(toastServiceSpy.show).toHaveBeenCalledWith(
+      'Kampania została zaktualizowana!',
+      'success'
+    );
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/campaigns']);
   }));
 
   it('metoda onSubmit nie wysyła formularza, jeśli formularz jest niepoprawny', () => {
     component.campaignForm.get('name')?.setValue('');
     component.onSubmit();
-    expect(toastServiceSpy.show).toHaveBeenCalledWith('Formularz zawiera błędy. Sprawdź dane.', 'error');
+    expect(toastServiceSpy.show).toHaveBeenCalledWith(
+      'Formularz zawiera błędy. Sprawdź dane.',
+      'error'
+    );
   });
 
   it('onFileChange ustawia selectedFile i uploadProgress po wczytaniu pliku', () => {
     const fakeFile = new Blob(['fake content'], { type: 'text/plain' });
     const event = {
-      target: { files: [fakeFile] }
+      target: { files: [fakeFile] },
     } as unknown as Event;
 
     // Szpiegujemy FileReader; tworzymy obiekt, który natychmiast wywoła onload
     spyOn(window as any, 'FileReader').and.returnValue({
       readAsDataURL(file: Blob) {
         this.onload({ target: { result: 'data:text/plain;base64,fake' } });
-      }
+      },
     });
     component.onFileChange(event);
     expect(component.selectedFile).toEqual('data:text/plain;base64,fake');
