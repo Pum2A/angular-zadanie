@@ -148,9 +148,7 @@
     >
       Poprzednia
     </button>
-    <div class="flex justify-center items-center text-xs sm:text-sm my-2">
-      Strona nr: {{ currentPage }}
-    </div>
+
     <button
       (click)="nextPage()"
       class="px-2 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors text-xs sm:text-sm"
@@ -158,6 +156,10 @@
     >
       Następna
     </button>
+  </div>
+
+  <div class="flex justify-center items-center text-xs sm:text-sm m-4">
+    Strona nr: {{ currentPage }}
   </div>
 
   <!-- Confirmation Modal -->
